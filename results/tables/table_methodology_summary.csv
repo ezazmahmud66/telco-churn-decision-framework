@@ -1,0 +1,19 @@
+Component,Method
+Dataset,IBM Telco Customer Churn
+Total Samples,7043
+Development Split,80% stratified
+Final Test Split,20% stratified hold-out
+Development Samples,5634
+Final Test Samples,1409
+Cross-Validation,Stratified 5-fold CV
+Models Compared,Logistic Regression; Decision Tree; Random Forest; XGBoost; LightGBM
+Imbalance Strategies,Original; Class Weight; SMOTENC; SMOTENC + ENN
+Primary Ranking Metric,Average Precision (AP)
+Hyperparameter Search,Randomized parameter search with 5-fold CV
+Threshold Search,"0.01 to 0.99, step 0.01"
+Decision-Cost Scenarios,"FN:FP = 2:1, 5:1, 10:1"
+Robust Selection Rule,Minimax relative decision-cost regret
+Final Model,XGBoost
+Final Imbalance Strategy,Original
+Final Threshold,0.18
+Explainability,SHAP TreeExplainer

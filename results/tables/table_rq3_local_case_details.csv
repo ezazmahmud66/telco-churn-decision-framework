@@ -1,0 +1,4 @@
+Case_Type,Source_Index,True_Churn,Prediction,Predicted_Probability,Contract,tenure,InternetService,MonthlyCharges,OnlineSecurity,PaymentMethod,TechSupport,TotalCharges
+High_Confidence_TP,3380,1,1,0.9186782240867615,Month-to-month,1,Fiber optic,95.1,No,Electronic check,No,95.1
+Borderline,1878,0,1,0.18011657893657684,Month-to-month,3,No,20.75,No internet service,Credit card (automatic),No internet service,67.1
+False_Negative,4259,1,0,0.17951980233192444,Month-to-month,3,No,19.6,No internet service,Mailed check,No internet service,59.75

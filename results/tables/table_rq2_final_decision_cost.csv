@@ -1,0 +1,4 @@
+Scenario,FN_FP_Ratio,Default_Cost,Selected_Cost,Cost_Reduction,Cost_Reduction_Percentage,Interpretation
+FN2_FP1,2,0.31724627395315824,0.3435060326472676,-0.026259758694109347,-8.27740492170024,Selected threshold increases cost when missed churners receive only twice the penalty of false positives.
+FN5_FP1,5,0.6898509581263307,0.45422285308729593,0.23562810503903475,34.15637860082305,Selected threshold substantially reduces cost when missed churners receive five times the penalty.
+FN10_FP1,10,1.3108587650816181,0.63875088715401,0.6721078779276082,51.27233351380617,Selected threshold strongly reduces cost when missed churners receive ten times the penalty.

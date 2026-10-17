@@ -1,0 +1,751 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+
+\usepackage{lmodern}
+
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+
+\IfFileExists{microtype.sty}{%
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath}
+}{}
+
+\makeatletter
+\@ifundefined{KOMAClassName}{%
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{%
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}
+  }
+}{%
+  \KOMAoptions{parskip=half}
+}
+\makeatother
+
+\usepackage{xcolor}
+\usepackage[margin= 0.75 in]{geometry}
+
+% ------------------------------------------------------------
+% Table packages
+% ------------------------------------------------------------
+\usepackage{longtable,booktabs,array}
+\usepackage{tabularx}
+\usepackage{calc}
+
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}
+  {\usepackage{footnotehyper}}
+  {\usepackage{footnote}}
+
+\makesavenoteenv{longtable}
+
+\setlength{\emergencystretch}{3em}
+
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}
+  \setlength{\parskip}{0pt}
+}
+
+\setcounter{secnumdepth}{-\maxdimen}
+
+\ifLuaTeX
+  \usepackage{selnolig}
+\fi
+
+\usepackage{bookmark}
+
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{}
+
+\urlstyle{same}
+
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}
+}
+
+\author{}
+\date{}
+
+\begin{document}
+
+\begin{center}
+    \textbf{\Large
+    From Churn Prediction to Retention Decisions:
+    An Imbalance- and Threshold-Aware Machine Learning Framework for Telecom Customer Churn} \\[1.5em]
+
+    \begin{minipage}[t]{0.46\textwidth}
+        \centering
+        \textbf{Dr. Md. Atiqur Rahman} \\
+        Assistant Professor \\
+        Department of Computer Science and Engineering \\
+        East West University, Dhaka, Bangladesh \\
+        \texttt{atiqur.rahman@ewubd.edu}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.46\textwidth}
+        \centering
+        \textbf{Md. Ezaz Mahmud} \\
+        ID: 2023-1-60-009 \\
+        Department of Computer Science and Engineering \\
+        East West University, Dhaka, Bangladesh \\
+        \texttt{ezaz.mahmudewu@gmail.com}
+    \end{minipage}
+\end{center}
+
+\textbf{Abstract---}Customer churn prediction is useful only when
+predicted risk can be translated into a sensible retention decision.
+Most telecom churn studies report accuracy, F1-score or ROC-AUC, yet the
+operational consequences of a probability threshold are often less
+visible. This study develops a leakage-safe framework that examines
+class imbalance, probability thresholds, decision consequences and model
+explanations within one experimental design. The IBM Telco Customer
+Churn dataset, containing 7,043 customers, was evaluated with five
+machine-learning algorithms and four imbalance-handling strategies.
+Average Precision (AP) was used as the primary ranking metric under
+stratified five-fold cross-validation. Tuned candidates were then
+evaluated using leakage-free out-of-fold probabilities, threshold scans
+and three transparent false-negative to false-positive scenarios (2:1,
+5:1 and 10:1). A minimax relative-regret rule selected XGBoost trained
+on the original data with a threshold of 0.18. On the untouched test
+set, the model obtained AP 0.665 and ROC-AUC 0.847. Lowering the
+threshold from 0.50 to 0.18 increased churn recall from 0.532 to 0.861
+and reduced missed churners from 175 to 52, while false positives
+increased from 97 to 380. The selected threshold reduced normalized
+decision cost by 34.16\% and 51.27\% under the 5:1 and 10:1 scenarios,
+respectively, but was 8.28\% worse under 2:1. SHAP analysis identified
+Contract, tenure, InternetService, MonthlyCharges and OnlineSecurity as
+the strongest model-level contributors. The results show that churn
+models should be judged not only by ranking quality, but also by the
+decisions created by their operating threshold.
+
+\textbf{Keywords---}\emph{customer churn; class imbalance; decision
+threshold; Average Precision; XGBoost; explainable AI}
+
+\textbf{I. INTRODUCTION}
+
+Customer churn is a persistent concern in telecommunications because
+losing an established subscriber affects recurring revenue, service
+planning and the cost of retention campaigns. Machine-learning methods
+are now routinely used to estimate churn risk from customer
+demographics, subscribed services, billing patterns and account history.
+Recent studies have compared logistic regression, decision trees, random
+forests, gradient boosting and neural models, while others have
+introduced resampling, ensemble learning and explainable artificial
+intelligence (Chang et al., 2024; Alotaibi and Haq, 2024; Asif et al.,
+2025).
+
+The central difficulty, however, is not simply to obtain a model with a
+high score. Telecom churn data are commonly imbalanced, and the default
+probability threshold of 0.50 can hide a large number of missed
+churners. A model may rank customers well and still produce an operating
+point that is poorly aligned with retention priorities. Manzoor et al.
+(2024), after reviewing 212 churn studies, noted that
+profitability-oriented evaluation remains under-researched and argued
+for stronger links between predictive modelling and business decision
+making. Poudel et al. (2024) similarly showed that reasonable overall
+performance can coexist with a meaningful number of false negatives,
+which is important when the objective is early retention action.
+
+Class imbalance has been approached through class weighting, synthetic
+oversampling and hybrid resampling. Ouf et al. (2024) and Wagh et al.
+(2024), for example, investigated SMOTE-ENN-based strategies, whereas
+Sikri et al. (2024) examined churn behaviour under different class
+ratios. Explainability has also become more common through SHAP and LIME
+(Chang et al., 2024; Asif et al., 2025). These developments are
+valuable, but they are usually reported as separate modelling choices.
+Within the reviewed literature, there is limited evidence of a single
+leakage-safe evaluation process that connects imbalance handling,
+threshold selection, false-negative/false-positive consequences and
+post-hoc explanation.
+
+This study addresses that gap by treating churn prediction as a decision
+problem rather than a leaderboard problem. The work asks three
+questions. RQ1 examines how imbalance strategies change model
+performance under the same validation protocol. RQ2 studies how
+probability thresholds alter the balance between detected churners and
+unnecessary interventions, and identifies one model-threshold pair that
+remains robust across several decision-cost assumptions. RQ3
+investigates which customer attributes most strongly influence the final
+model at both global and individual levels.
+
+The contribution is therefore not a new classifier, resampling algorithm
+or explainability method. Instead, the study integrates these components
+into a retention-oriented framework: leakage-safe preprocessing,
+controlled imbalance experiments, AP-based model ranking, out-of-fold
+threshold analysis, transparent scenario costs, minimax relative-regret
+selection and SHAP interpretation. The remainder of the paper reviews
+related work, describes the methodology, reports the experimental
+results, discusses their implications and closes with the main findings
+and limitations.
+
+\textbf{II. RELATED WORK}
+
+Customer churn has been studied with a broad range of machine-learning
+approaches. Manzoor et al. (2024) provide a comprehensive view of the
+field, covering preprocessing, feature selection, modelling and
+evaluation, and identify profit-aware evaluation and explainability as
+important directions. In application studies, Chang et al. (2024)
+combined telecom churn classification with SHAP and LIME, while Poudel
+et al. (2024) used tabular machine-learning models and both global and
+local SHAP explanations. These studies demonstrate that predictive
+performance and interpretability can be considered together.
+
+Imbalance handling is another recurring theme. Sikri et al. (2024)
+analysed different class ratios and reported XGBoost results with
+accuracy 89.60\%, precision 76.04\%, recall 62.82\% and F1-score 68.80\%
+for one configuration. Ouf et al. (2024) integrated XGBoost with
+SMOTE-ENN and reported large changes in classifier behaviour after
+resampling. Wagh et al. (2024) also examined the IBM Telco data with
+SMOTE-ENN and survival analysis. These findings make clear that
+resampling can materially alter the minority-class operating point, but
+they also underline the need for leakage-safe and comparable evaluation.
+
+Several studies have focused on model comparison and optimisation. Saleh
+and Saha (2023) compared multiple classifiers across telecom datasets,
+including the IBM data. Alotaibi and Haq (2024) evaluated decision tree,
+logistic regression, XGBoost, LightGBM, ANN and an averaging ensemble;
+the ensemble did not automatically outperform the stronger individual
+models. AlShourbaji et al. (2023) combined gradient boosting with
+metaheuristic optimisation, oversampling and feature selection. More
+recently, Asif et al. (2025) proposed an explainable ensemble of
+XGBoost, CatBoost and LightGBM on a dataset exceeding two million
+records and used SHAP and LIME to interpret predictions.
+
+Taken together, the literature already contains strong work on
+classifiers, ensembles, imbalance handling, tuning and XAI. The narrower
+gap addressed here is the transition from probability ranking to
+retention action: how training-time imbalance choices interact with
+threshold selection, how many churners are missed or how many
+non-churners are unnecessarily targeted, and how one operating point can
+be selected when the exact relative cost of these errors is uncertain.
+
+\textbf{TABLE I. SUMMARY OF CLOSELY RELATED STUDIES}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Study}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Main approach}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Relevance to this study}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Manzoor et al. (2024) & Review of 212 churn studies & Highlights limited
+profit-oriented evaluation and need for decision support. \\
+Chang et al. (2024) & ML models + SHAP/LIME & Shows value of explainable
+churn prediction. \\
+Sikri et al. (2024) & Class-ratio analysis + XGBoost & Demonstrates
+sensitivity of churn metrics to imbalance treatment. \\
+Poudel et al. (2024) & Tabular ML + SHAP & Shows strong overall metrics
+can still leave missed churners. \\
+Saleh and Saha (2023) & Multi-dataset classifier comparison & Supports
+cross-model evaluation on telecom churn data. \\
+Wagh et al. (2024) & SMOTE-ENN + ML + survival & Illustrates hybrid
+balancing for IBM Telco churn. \\
+Asif et al. (2025) & TriBoost ensemble + SHAP/LIME & Combines strong
+prediction with XAI on large telecom data. \\
+Ouf et al. (2024) & XGBoost + SMOTE-ENN & Shows large changes after
+hybrid resampling. \\
+Alotaibi and Haq (2024) & ML, ANN, ensemble, tuning & Comparable short
+experimental study on IBM Telco data. \\
+AlShourbaji et al. (2023) & Boosting + metaheuristic optimisation &
+Represents optimisation-focused churn modelling. \\
+\end{longtable}
+
+\textbf{III. METHODOLOGY}
+
+The experimental design was organised so that every modelling choice was
+made on development data and the final test set remained locked. Figure
+1 shows the complete workflow, from data audit to
+final paper outputs. The main methodological stages are described below.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\linewidth]{telco.png}
+    \caption{Proposed leakage-safe, imbalance-aware, threshold-aware, and decision-oriented telecom churn prediction framework.}
+    \label{fig:workflow}
+\end{figure}
+
+
+
+
+
+\emph{\textbf{A. Dataset and Data Preparation}}
+
+The IBM Telco Customer Churn dataset contains 7,043 customers and 21
+original columns. The target distribution is imbalanced: 5,174 customers
+(73.46\%) are non-churners and 1,869 (26.54\%) are churners. The unique
+customerID field was removed. TotalCharges, initially stored as an
+object, contained 11 blank entries; these were converted to missing
+numeric values and retained for fold-wise imputation. Churn was encoded
+as 1 for Yes and 0 for No. No manual feature engineering was introduced.
+
+Exploratory analysis showed clear descriptive differences between
+churners and non-churners. Median tenure was approximately 10 months for
+churners and 38 months for non-churners. Higher churn rates were
+observed among month-to-month contracts, fibre-optic users,
+electronic-check customers and customers without online security or
+technical support. These patterns were treated as associations and were
+not interpreted as causal effects.
+
+\emph{\textbf{B. Locked Hold-out and Leakage-Safe Preprocessing}}
+
+A stratified 80/20 split with random\_state = 42 created a development
+set of 5,634 customers and a locked test set of 1,409. The development
+set contained 4,139 non-churners and 1,495 churners; the test set
+contained 1,035 and 374, respectively. All model comparison,
+preprocessing, tuning and threshold selection used development data
+only.
+
+Three variables (tenure, MonthlyCharges and TotalCharges) were treated
+as continuous and processed with median imputation followed by
+standardisation. The remaining 16 predictors, including SeniorCitizen,
+were treated as categorical or binary. They were imputed with the most
+frequent category and ordinal-encoded before any sampling step. One-hot
+encoding was applied after sampling. This ordering allowed SMOTENC to
+operate on categorical-aware representations rather than interpolating
+one-hot dummy variables. Every transformation was fitted inside the
+training portion of each fold.
+
+\emph{\textbf{C. Models, Imbalance Strategies and Validation}}
+
+Five classifiers were evaluated: Logistic Regression (LR), Decision Tree
+(DT), Random Forest (RF), XGBoost and LightGBM. Four imbalance
+strategies were compared: Original data, Class Weight, SMOTENC and
+SMOTENC followed by Edited Nearest Neighbours (ENN). In the hybrid
+pipeline, ENN used n\_neighbors = 3 and sampling\_strategy = "all". The
+design produced 20 baseline model-strategy combinations evaluated on the
+same stratified five-fold splits.
+
+Average Precision (AP) was the primary model-ranking metric because it
+summarises precision-recall behaviour in an imbalanced binary problem.
+ROC-AUC, precision, recall, F1-score, accuracy, false negatives (FN) and
+false positives (FP) were retained as secondary measures. The AP leader
+for each model was carried forward, together with selected near-best
+strategies where AP loss was no greater than 0.005 and recall improved
+materially. Seven candidates were then tuned by randomised search. In
+total, 205 parameter configurations were evaluated over five folds
+(1,025 fits).
+
+\emph{\textbf{D. Out-of-Fold Probabilities and Threshold Analysis}}
+
+Leakage-free out-of-fold (OOF) probabilities were generated for the
+seven tuned candidates. Each development customer was predicted only by
+a model that had not been trained on that customer. These OOF scores,
+rather than the final test set, were used to study operating thresholds.
+
+Thresholds from 0.01 to 0.99 were evaluated in steps of 0.01. For each
+threshold, precision, recall, F1, FN and FP were recorded. The search
+range was extended after an initial boundary check showed that one
+high-FN-cost optimum occurred at the lower edge of the first scan. No
+test information was used during this extension.
+
+\emph{\textbf{E. Decision-Cost Framework}}
+
+The dataset does not contain observed customer lifetime value,
+retention-offer cost or profit margin. For that reason, the study does
+not claim monetary profit. Instead, three transparent scenarios were
+defined in which one missed churner was assumed to have two, five or ten
+times the consequence of one unnecessary intervention. For threshold t
+and relative FN cost r, normalized decision cost was defined as:
+
+\[
+C_r(t)=\frac{r \cdot FN(t)+FP(t)}{N}
+\]
+
+where N is the number of evaluated customers and r $\\in$ \{2, 5, 10\}. Lower
+values indicate a more favourable decision under that assumed scenario.
+
+\emph{\textbf{F. Robust Model-Threshold Selection}}
+
+Different cost scenarios naturally favoured different thresholds. To
+select one operating point without pretending that a single cost ratio
+was known, relative regret was computed against the best achievable cost
+within each scenario:
+
+\[
+R_{m,t,s}
+=
+\frac{
+C_{m,t,s}-C_s^{*}
+}{
+C_s^{*}
+}
+\]
+
+The final combination minimised the largest relative regret across the
+three scenarios:
+
+\[
+(m^{*},t^{*})
+=
+\underset{m,t}{\operatorname{arg\,min}}
+\;
+\underset{s}{\max}
+\;
+R_{m,t,s}
+\]
+
+Ties were resolved using mean relative regret, mean normalized cost and
+then OOF predictive quality. This procedure selected XGBoost trained on
+the original distribution with threshold 0.18. The tuned model used 200
+estimators, learning rate 0.05, max\_depth 2, min\_child\_weight 5,
+subsample 0.8, colsample\_bytree 0.8, reg\_alpha 0 and reg\_lambda 1.0.
+
+\emph{\textbf{G. Final Evaluation and SHAP}}
+
+After the model and threshold were locked, the pipeline was refitted on
+all development data and evaluated once on the untouched test set. SHAP
+TreeExplainer was then applied to all 1,409 test customers. Encoded SHAP
+values belonging to the same original feature were summed per customer
+before computing mean absolute importance, preventing multi-level
+categorical variables from being inflated simply because they produced
+more dummy columns. SHAP was used only for explanation after model
+selection and was not treated as evidence of causality.
+
+\textbf{IV. EXPERIMENTAL RESULTS}
+
+\emph{\textbf{A. RQ1: Effect of Class-Imbalance Handling}}
+
+The tuned results show that imbalance handling changed the operating
+behaviour of the models more than it changed their ranking quality.
+XGBoost on the original distribution achieved the highest mean CV AP
+(0.6714), closely followed by class-weighted XGBoost (0.6700). The
+class-weighted model, however, produced much higher recall at the
+default threshold. LightGBM and Decision Tree with SMOTENC+ENN also
+achieved high recall, but at lower AP and precision.
+
+\textbf{TABLE II. TUNED CANDIDATE COMPARISON ON FIVE-FOLD DEVELOPMENT
+CV}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1429}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1429}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1429}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1429}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1429}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1429}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1429}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Candidate}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Strategy}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{AP}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{ROC-AUC}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Precision}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Recall}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{F1}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+XGBoost & Original & 0.6714 & 0.8503 & 0.6683 & 0.5298 & 0.5908 \\
+XGBoost & Class Weight & 0.6700 & 0.8498 & 0.5212 & 0.8161 & 0.6360 \\
+Random Forest & Original & 0.6666 & 0.8480 & 0.6768 & 0.5050 & 0.5781 \\
+Logistic Reg. & Original & 0.6616 & 0.8462 & 0.6531 & 0.5438 & 0.5928 \\
+Logistic Reg. & Class Weight & 0.6600 & 0.8460 & 0.5174 & 0.8007 &
+0.6284 \\
+LightGBM &
+SMOTENC
++ENN & 0.6587 & 0.8438 & 0.4956 & 0.8321 & 0.6211 \\
+Decision Tree &
+SMOTENC
++ENN & 0.5802 & 0.8207 & 0.4815 & 0.8140 &
+0.6048 \\
+\end{longtable}
+
+
+
+
+
+
+Pooled OOF AP remained similarly close for XGBoost Original (0.6682) and
+XGBoost Class Weight (0.6669). Yet, at threshold 0.50, their recalls
+were 0.530 and 0.816, respectively. When the operating point was matched
+at roughly 80\% recall, the difference almost disappeared: XGBoost
+Original at threshold 0.27 produced recall 0.802 and precision 0.523,
+while class-weighted XGBoost at 0.51 produced recall 0.804 and precision
+0.525. This result answers RQ1: imbalance treatment is model-dependent,
+and its apparent benefit at a fixed threshold can overlap with what is
+achievable through threshold adjustment.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\linewidth]{rq1_model_imbalance_ap.png}
+    \caption{AP comparison across the model and imbalance experiments.}
+    \label{fig:rq1_ap}
+\end{figure}
+
+\emph{\textbf{B. RQ2: Threshold and Decision Consequences}}
+
+The robust OOF selection chose XGBoost Original at threshold 0.18. Its
+OOF AP and ROC-AUC were 0.6682 and 0.8496. At the selected threshold,
+OOF recall reached 0.8823 with precision 0.4677 and F1 0.6114. The
+maximum relative regret across the three cost scenarios was 0.1431,
+lower than the competing model-threshold combinations.
+
+On the locked test set, AP was 0.6650 and ROC-AUC was 0.8468. The small
+changes from OOF (--0.0032 AP and --0.0028 ROC-AUC) indicate that ranking
+performance transferred closely to unseen data. More importantly, the
+operating threshold changed the error profile. At 0.50, recall was
+0.5321 with 175 false negatives. At 0.18, recall rose to 0.8610 and
+false negatives fell to 52. The cost of that gain was a rise in false
+positives from 97 to 380 and a reduction in overall accuracy.
+
+\textbf{TABLE III. FINAL LOCKED-TEST PERFORMANCE AT DEFAULT AND SELECTED
+THRESHOLDS}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1429}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1429}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1429}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1429}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1429}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1429}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 12\tabcolsep) * \real{0.1429}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Threshold}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Accuracy}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Precision}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Recall}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{F1}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{FN}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{FP}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+0.50 & 0.8070 & 0.6723 & 0.5321 & 0.5940 & 175 & 97 \\
+0.18 & 0.6934 & 0.4587 & 0.8610 & 0.5985 & 52 & 380 \\
+\end{longtable}
+
+Thus, 123 additional churners were captured, but 283 additional
+non-churners were flagged. This is the central trade-off of the study: a
+lower threshold is not simply \textquotesingle better\textquotesingle;
+it is preferable only when the cost of missing churners is sufficiently
+high relative to the cost of unnecessary retention contact.
+
+\textbf{TABLE IV. FINAL NORMALIZED DECISION COST}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{FN:FP scenario}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Cost at 0.50}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Cost at 0.18}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Change}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+2:1 & 0.317246 & 0.343506 & 8.28\% worse \\
+5:1 & 0.689851 & 0.454223 & 34.16\% lower \\
+10:1 & 1.310859 & 0.638751 & 51.27\% lower \\
+\end{longtable}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\linewidth]{threshold_performance_comparison.png}
+    \caption{Default versus selected threshold and decision-cost comparison.}
+    \label{fig:threshold_comparison}
+\end{figure}
+
+\emph{\textbf{C. RQ3: Explainability of the Final Model}}
+
+The grouped SHAP analysis identified Contract as the most influential
+original feature (mean \textbar SHAP\textbar{} = 0.6622), followed by
+tenure (0.5118), InternetService (0.2908), MonthlyCharges (0.2298) and
+OnlineSecurity (0.2215). PaymentMethod, TechSupport, PaperlessBilling,
+MultipleLines and TotalCharges completed the top ten. At the encoded
+level, month-to-month contract, tenure, fibre-optic internet,
+MonthlyCharges, lack of OnlineSecurity, two-year contract, electronic
+check and lack of TechSupport were among the strongest contributors.
+
+Local explanations also showed why threshold choice matters for
+individual customers. A high-confidence true positive received churn
+probability 0.9187, while a borderline non-churner and one
+false-negative churner received 0.1801 and 0.1795, respectively, placing
+them on opposite sides of the selected decision boundary. SHAP therefore
+helps explain how the model arrived at a risk score, but it does not
+establish that changing one attribute would causally prevent churn.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\linewidth]{grouped_shap.png}
+    \caption{Global grouped SHAP feature importance for the final XGBoost model.}
+    \label{fig:grouped_shap}
+\end{figure}
+
+\textbf{V. DISCUSSION}
+
+Three observations stand out from the experiments. First, the choice of
+imbalance strategy should not be judged at threshold 0.50 alone. Class
+weighting substantially increased default-threshold recall, but the
+corresponding AP remained almost unchanged relative to XGBoost trained
+on the original data. Once thresholds were aligned to comparable recall,
+the two XGBoost variants behaved almost identically. This suggests that
+training-time imbalance handling and post-training threshold selection
+are partly substitutable and should be analysed together rather than
+reported as separate improvements.
+
+Second, the final threshold exposes the practical cost of higher churn
+sensitivity. At 0.18, the model detected 86.1\% of test churners,
+compared with 53.2\% at 0.50. That gain reduced missed churners from 175
+to 52, but it also generated 380 false positives. Under the 2:1 scenario
+this was not worthwhile; under 5:1 and 10:1 it produced sizable cost
+reductions. The result is therefore deliberately conditional. No
+threshold is universally optimal. A retention team should choose an
+operating point only after deciding how it values a missed churner
+relative to an unnecessary intervention.
+
+Third, the selected model remained interpretable at both portfolio and
+customer level. Contract and tenure dominated the SHAP ranking, while
+internet service, billing and support variables also contributed
+strongly. These patterns are consistent with the broad direction
+reported in explainable telecom churn studies (Chang et al., 2024;
+Poudel et al., 2024), but the present analysis keeps a clear distinction
+between model explanation and causality.
+
+The study has several limitations. It uses one public dataset and
+therefore does not establish external validity across operators or
+countries. The decision-cost ratios are hypothetical because the data
+contain no observed customer lifetime value, retention-offer cost,
+campaign response or profit margin. Probability calibration was not
+separately optimised, and the scores should be treated as risk scores
+for ranking and thresholding rather than guaranteed frequencies.
+External validation and prospective retention experiments were also
+outside the scope of the work. Future studies could incorporate real
+customer value and intervention costs, test calibrated probabilities,
+validate on additional operators and compare a global threshold with
+customer-specific treatment policies.
+
+\textbf{VI. CONCLUSION}
+
+This study presented a leakage-safe, imbalance-aware and threshold-aware
+framework for telecom churn prediction. Five machine-learning models and
+four imbalance strategies were compared, tuned and evaluated with AP as
+the primary ranking measure. OOF probabilities were then used to study
+thresholds and transparent FN:FP cost scenarios without touching the
+final test set.
+
+The final choice was XGBoost trained on the original distribution with
+threshold 0.18. On the locked test set it achieved AP 0.6650 and ROC-AUC
+0.8468. Relative to threshold 0.50, recall rose from 0.5321 to 0.8610
+and false negatives fell from 175 to 52, although false positives
+increased from 97 to 380. The selected operating point reduced
+normalized cost under the 5:1 and 10:1 scenarios but not under 2:1. The
+main conclusion is therefore straightforward: a strong churn model is
+not enough; its threshold must be judged against the consequences of the
+decisions it creates. SHAP further identified the customer attributes
+most influential to the final model and provided a transparent layer for
+interpreting individual risk scores.
+
+\textbf{REFERENCES}
+
+Alotaibi, M.Z. and Haq, M.A., 2024. Customer churn prediction for
+telecommunication companies using machine learning and ensemble methods.
+Engineering, Technology \& Applied Science Research, 14(3),
+pp.14572-14578.
+
+AlShourbaji, I., Helian, N., Sun, Y., Hussien, A.G., Abualigah, L. and
+Elnaim, B., 2023. An efficient churn prediction model using gradient
+boosting machine and metaheuristic optimization. Scientific Reports,
+13(1), p.14441.
+
+Asif, D., Arif, M.S. and Mukheimer, A., 2025. A data-driven approach
+with explainable artificial intelligence for customer churn prediction
+in the telecommunications industry. Results in Engineering, 26,
+p.104629.
+
+Chang, V., Hall, K., Xu, Q.A., Amao, F.O., Ganatra, M.A. and Benson, V.,
+2024. Prediction of customer churn behavior in the telecommunication
+industry using machine learning models. Algorithms, 17(6), p.231.
+
+Manzoor, A., Qureshi, M.A., Kidney, E. and Longo, L., 2024. A review on
+machine learning methods for customer churn prediction and
+recommendations for business practitioners. IEEE Access, 12,
+pp.70434-70463.
+
+Ouf, S., Mahmoud, K.T. and Abdel-Fattah, M.A., 2024. A proposed hybrid
+framework to improve the accuracy of customer churn prediction in
+telecom industry. Journal of Big Data, 11(1), p.70.
+
+Poudel, S.S., Pokharel, S. and Timilsina, M., 2024. Explaining customer
+churn prediction in telecom industry using tabular machine learning
+models. Machine Learning with Applications, 17, p.100567.
+
+Saleh, S. and Saha, S., 2023. Customer retention and churn prediction in
+the telecommunication industry: a case study on a Danish university. SN
+Applied Sciences, 5(7), p.173.
+
+Sikri, A., Jameel, R., Idrees, S.M. and Kaur, H., 2024. Enhancing
+customer retention in telecom industry with machine learning driven
+churn prediction. Scientific Reports, 14(1), p.13097.
+
+Wagh, S.K., Andhale, A.A., Wagh, K.S., Pansare, J.R., Ambadekar, S.P.
+and Gawande, S.H., 2024. Customer churn prediction in telecom sector
+using machine learning techniques. Results in Control and Optimization,
+14, p.100342.
+
+\end{document}

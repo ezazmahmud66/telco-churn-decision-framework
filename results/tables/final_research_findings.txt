@@ -1,0 +1,14 @@
+FINAL RESEARCH FINDINGS
+======================================================================
+
+RQ1 — CLASS IMBALANCE
+The effect of imbalance handling was model-dependent. The original-data XGBoost configuration achieved the strongest ranking performance, while class weighting and resampling generally increased churn recall but did not necessarily improve Average Precision.
+
+RQ2 — THRESHOLD AND DECISION COST
+Lowering the decision threshold from 0.50 to the development-selected robust threshold of 0.18 substantially increased churn recall and reduced false negatives, but also increased false positives. The selected threshold reduced decision cost under the 5:1 and 10:1 FN-to-FP scenarios but was less favorable under the 2:1 scenario.
+
+RQ3 — EXPLAINABILITY
+SHAP analysis identified Contract, tenure, InternetService, MonthlyCharges, and OnlineSecurity as the five strongest original-feature contributors to the selected XGBoost model.
+
+IMPORTANT INTERPRETATION NOTE
+SHAP values describe model-level prediction contributions and associations, not causal effects.

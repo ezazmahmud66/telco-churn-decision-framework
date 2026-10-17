@@ -1,0 +1,84 @@
+{
+    "RQ1": {
+        "question": "How do different class-imbalance handling strategies affect predictive performance?",
+        "finding": "The effect of imbalance handling was model-dependent. The original-data XGBoost configuration achieved the strongest ranking performance, while class weighting and resampling generally increased churn recall but did not necessarily improve Average Precision.",
+        "key_values": {
+            "final_selected_candidate": "XGBoost_Original",
+            "development_oof_ap": 0.6682076819662479,
+            "final_test_ap": 0.665035833851828,
+            "final_test_roc_auc": 0.846822444392777
+        }
+    },
+    "RQ2": {
+        "question": "How does probability-threshold adjustment change the trade-off between detecting churners and unnecessarily targeting non-churners?",
+        "finding": "Lowering the decision threshold from 0.50 to the development-selected robust threshold of 0.18 substantially increased churn recall and reduced false negatives, but also increased false positives. The selected threshold reduced decision cost under the 5:1 and 10:1 FN-to-FP scenarios but was less favorable under the 2:1 scenario.",
+        "default_threshold": 0.5,
+        "selected_threshold": 0.18,
+        "default_recall": 0.5320855614973262,
+        "selected_recall": 0.8609625668449198,
+        "default_fn": 175,
+        "selected_fn": 52,
+        "default_fp": 97,
+        "selected_fp": 380,
+        "cost_change_percent": {
+            "FN2_FP1": -8.27740492170024,
+            "FN5_FP1": 34.15637860082305,
+            "FN10_FP1": 51.27233351380617
+        }
+    },
+    "RQ3": {
+        "question": "Which customer attributes most strongly influence the selected model's predictions?",
+        "finding": "SHAP analysis identified Contract, tenure, InternetService, MonthlyCharges, and OnlineSecurity as the five strongest original-feature contributors to the selected XGBoost model.",
+        "top_features": [
+            {
+                "Raw_Feature": "Contract",
+                "Mean_Absolute_SHAP": 0.6621782428914161
+            },
+            {
+                "Raw_Feature": "tenure",
+                "Mean_Absolute_SHAP": 0.511828195903395
+            },
+            {
+                "Raw_Feature": "InternetService",
+                "Mean_Absolute_SHAP": 0.29075052231636805
+            },
+            {
+                "Raw_Feature": "MonthlyCharges",
+                "Mean_Absolute_SHAP": 0.2298285877418019
+            },
+            {
+                "Raw_Feature": "OnlineSecurity",
+                "Mean_Absolute_SHAP": 0.22146288835223119
+            },
+            {
+                "Raw_Feature": "PaymentMethod",
+                "Mean_Absolute_SHAP": 0.17244929972060444
+            },
+            {
+                "Raw_Feature": "TechSupport",
+                "Mean_Absolute_SHAP": 0.1653587744260442
+            },
+            {
+                "Raw_Feature": "PaperlessBilling",
+                "Mean_Absolute_SHAP": 0.13483407422292096
+            },
+            {
+                "Raw_Feature": "MultipleLines",
+                "Mean_Absolute_SHAP": 0.1095119807267703
+            },
+            {
+                "Raw_Feature": "TotalCharges",
+                "Mean_Absolute_SHAP": 0.10605760816310521
+            }
+        ],
+        "causal_claim": false
+    },
+    "generalization": {
+        "development_oof_ap": 0.6682076819662479,
+        "final_test_ap": 0.665035833851828,
+        "ap_difference": -0.0031718481144199506,
+        "development_oof_roc_auc": 0.8496046659518197,
+        "final_test_roc_auc": 0.846822444392777,
+        "roc_auc_difference": -0.00278222155904273
+    }
+}
