@@ -793,7 +793,7 @@ This project was developed after reviewing recent studies on:
 ### Md. Ezaz Mahmud
 
 **ID:** 2023-1-60-000  
-**Course:** CSE 475  
+**Course:** CSE 475 (ML Course) 
 **Department:** Computer Science and Engineering  
 **University:** East West University, Bangladesh  
 **Email:** ezazmahmud1230@gmail.com
@@ -812,7 +812,7 @@ East West University, Bangladesh
 
 # 📜 Academic Note
 
-This project was completed as part of **CSE 475** at the Department of Computer Science and Engineering, East West University.
+This project was completed as part of **CSE 475 (ML Course)** at the Department of Computer Science and Engineering, East West University.
 
 The scenario-based decision-cost analysis is intended for research and educational evaluation and should not be interpreted as measured commercial profit or actual telecom retention cost.
 
