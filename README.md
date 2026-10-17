@@ -411,9 +411,7 @@ FN : FP
 
 The normalized decision cost was defined as:
 
-\[
-C_r(t)=\frac{r \cdot FN(t)+FP(t)}{N}
-\]
+![Research Workflow](assets/decision_cost.png)
 
 where:
 
@@ -434,12 +432,6 @@ Relative regret was calculated as:
 
 ![Research Workflow](assets/Relative_cost.png)
 
-\[
-R_{m,t,s}
-=
-\frac{C_{m,t,s}-C_s^*}
-{C_s^*}
-\]
 
 This measures how far a model-threshold combination is from the best achievable cost within a given scenario.
 
@@ -448,13 +440,7 @@ This measures how far a model-threshold combination is from the best achievable 
 # 🛡️ Minimax Relative-Regret Selection
 
 To select one model-threshold combination that performs reasonably across all scenarios:
-
-\[
-(m^*,t^*)
-=
-\arg\min_{m,t}
-\max_s R_{m,t,s}
-\]
+![Research Workflow](assets/max_regret_cost.png)
 
 In simple terms:
 
