@@ -432,6 +432,8 @@ Different cost scenarios naturally favor different thresholds.
 
 Relative regret was calculated as:
 
+![Research Workflow](assets/Relative_cost.png)
+
 \[
 R_{m,t,s}
 =
