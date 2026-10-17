@@ -440,6 +440,7 @@ This measures how far a model-threshold combination is from the best achievable 
 # 🛡️ Minimax Relative-Regret Selection
 
 To select one model-threshold combination that performs reasonably across all scenarios:
+
 ![Research Workflow](assets/max_regret_cost.png)
 
 In simple terms:
